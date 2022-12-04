@@ -6,6 +6,11 @@ from create_csv import write_emodb_csv as wec
 from pydub import AudioSegment
 from pydub.playback import play
 import subprocess
+import random
+
+"""Emotions to recognize separated by a comma ',', available emotions are
+"neutral", "calm", "happy" "sad", "angry", "fear", "disgust", "ps" (pleasant surprise)
+and "boredom", default is "sad,neutral,happy"""
 
 e = ['disgust', 'sad', 'ps', 'happy', 'neutral', 'fear', 'angry', 'calm']
 
@@ -18,63 +23,115 @@ categories = {
     "T": "sad",
     "N": "neutral"
 }
+matches = ['M', 'manipulated','cut']
+valid_check = ['test', 'validation', 'emodb']
+
+positive_emotions = ['ps', 'happy']
+neutral_emotions = ['calm', 'calm', 'boredom']
+negative_emotions = ['fear', 'disgust', 'sad', 'angry']
+
+emotions = ['positive', 'neutral', 'negative']
 
 
-def insert_manipulate(string, index):
-    if index[1]:
-        return string[:index[0] - 1] + '-manipulated' + string[index[0] - 1:]
-    return 'manipulated_' + string
+def insert_manipulate(string, index, extra_string='-manipulated-'):
+    return string[:index - 1] + extra_string + string[index - 1:]
 
 
 def index_finder(param):
-    if param.find(e[0]) != -1:
-        return [param.find(e[0]), True]
-    elif param.find(e[1]) != -1:
-        return [param.find(e[1]), True]
-    elif param.find(e[2]) != -1:
-        return [param.find(e[2]), True]
-    elif param.find(e[3]) != -1:
-        return [param.find(e[3]), True]
-    elif param.find(e[4]) != -1:
-        return [param.find(e[4]), True]
-    elif param.find(e[5]) != -1:
-        return [param.find(e[5]), True]
-    elif param.find(e[6]) != -1:
-        return [param.find(e[6]), True]
-    elif param.find(e[7]) != -1:
-        return [param.find(e[7]), True]
-    elif param.find('W') != -1:
-        return [param.find('W'), False]
-    elif param.find('L') != -1:
-        return [param.find('L'), False]
-    elif param.find('E') != -1:
-        return [param.find('E'), False]
-    elif param.find('A') != -1:
-        return [param.find('A'), False]
-    elif param.find('F') != -1:
-        return [param.find('F'), False]
-    elif param.find('T') != -1:
-        return [param.find('T'), False]
-    elif param.find('N') != -1:
-        return [param.find('N'), False]
+    if param.find(emotions[0]) != -1:
+        return param.find(emotions[0])
+    elif param.find(emotions[1]) != -1:
+        return param.find(emotions[1])
+    elif param.find(emotions[2]) != -1:
+        return param.find(emotions[2])
 
 
-def iterative_directory_sound_combiner(src_path, background_sound, volume_of_background=0):
-    audio_seg_background = convert_to_audiosegment(background_sound)
-    audio_seg_background += volume_of_background
-    for subdir, dirs, files in os.walk(src_path):
+def rename_files(file) -> str:
+    file_name = file.split('.')[0]
+    if any(x in file_name for x in positive_emotions):
+        index = index_finder(file_name)
+        new_file = file_name[:index[0]] + 'positive'
+        print("New file name: " + new_file + '\n')
+    elif any(x in file_name for x in neutral_emotions):
+        index = index_finder(file_name)
+        new_file = file_name[:index[0]] + 'neutral'
+        print("New file name: " + new_file + '\n')
+    else:
+        index = index_finder(file_name)
+        new_file = file_name[:index[0]] + 'negative'
+        print("New file name: " + new_file + '\n')
+    return new_file
+
+
+def emotion_changer():
+    count = 0
+    for subdir, dirs, files in os.walk('data'):
+        if 'emodb' in subdir:
+            continue
         for file in files:
-            if file.endswith('wav') and 'manipulated' not in file:
+            if file.endswith('.wav') and (
+                    any(x in file for x in neutral_emotions) or (
+                    any(x in file for x in positive_emotions)) or (
+                            any(x in file for x in negative_emotions)) and not
+                    any(x in file for x in emotions)):
+                original_path = os.path.join(subdir, file)
+                subdir_path = os.path.join(subdir)
+                new_path = subdir_path + '\\' + rename_files(file) + '.wav'
+                if os.path.isfile(new_path):
+                    new_path = subdir_path + '\\' + rename_files(str(count) + '_' + file) + '.wav'
+                    os.rename(original_path, new_path)
+                    count += 1
+                else:
+                    os.rename(original_path, new_path)
+
+
+def dir_clean_manipulated():
+    print('Cleaning all the manipulated wav files')
+    for subdir, dirs, files in os.walk('data'):
+        for file in files:
+            if file.endswith('wav') and any(x in file for x in matches):
                 path = os.path.join(subdir, file)
-                str_sound = file.split('.')
-                index = index_finder(str_sound[0])
-                manipulated = insert_manipulate(str_sound[0], index)
-                sound = convert_to_audiosegment(path)
+                os.remove(path)
+
+
+def random_background_cut(src_path, backgrounds_path, volume=0, manipulated_name='-cut-'):
+    for subdir, dirs, files in os.walk(src_path):
+        if any(x in subdir for x in valid_check):
+            continue
+        for file in files:
+            if file.endswith('wav') and not any(x in file for x in matches):
+                random_seed = random.randint(1, 3)
+                if random_seed == 1:
+                    path = os.path.join(subdir, file)
+                    str_sound = file.split('.')[0]
+                    background_file = random.choice(os.listdir(backgrounds_path))
+                    background_audio = convert_to_audiosegment(backgrounds_path + '/' + background_file, volume)
+                    index = index_finder(str_sound)
+                    manipulated = insert_manipulate(str_sound, index=index, extra_string=manipulated_name)
+                    sound = AudioSegment.from_wav(path)
+                    add_background_voices(sound, background_audio, manipulated, subdir)
+
+
+def one_background_voice_for_all(src_path, background_sound_path, volume_of_background=0,
+                                 mixed_name='-manipulated', mixed=False):
+    audio_seg_background = convert_to_audiosegment(background_sound_path, volume_of_background)
+    for subdir, dirs, files in os.walk(src_path):
+        if any(x in subdir for x in valid_check):
+            continue
+        for file in files:
+            if file.endswith('wav') and not any(x in file for x in matches):
+                path = os.path.join(subdir, file)
+                str_sound = file.split('.')[0]
+                index = index_finder(str_sound)
+                manipulated = insert_manipulate(str_sound, index)
+                sound = AudioSegment.from_wav(path)
                 add_background_voices(sound, audio_seg_background, manipulated, subdir)
 
 
-def convert_to_audiosegment(path):
-    return AudioSegment.from_wav(path)
+def convert_to_audiosegment(path, vol):
+    audio = AudioSegment.from_wav(path)
+    audio += vol
+    return audio
 
 
 def add_background_voices(major_sound, background_sound, original_with_background, destination):
@@ -97,8 +154,11 @@ def convert(src, dst, ending_format):
     subprocess.call(['ffmpeg', '-i', src, dst + '.' + ending_format])
 
 
+random_background_cut('data', 'background/youtube', -2)
 # iterative_directory_sound_convertor('background', 'wav')
-
-
-iterative_directory_sound_combiner('data/emodb', background_sound='background/jet-plane-flybyflac-14641.wav',
-                                   volume_of_background=0)
+# dir_clean_manipulated()
+# emotion_changer()
+#
+# one_background_voice_for_all('data',
+#                              background_sound_path='background/jet-plane-flybyflac-14641.wav',
+#                              volume_of_background=-7)

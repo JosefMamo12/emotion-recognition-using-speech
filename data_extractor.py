@@ -6,6 +6,7 @@ import os
 
 from utils import get_label, extract_feature, get_first_letters
 from collections import defaultdict
+from xvector_creator import one_to_xvec
 
 
 class AudioExtractor:
@@ -13,7 +14,7 @@ class AudioExtractor:
     them to the machine learning algorithms for training and testing"""
 
     def __init__(self, audio_config=None, verbose=1, features_folder_name="features", classification=True,
-                 emotions=['sad', 'neutral', 'happy'], balance=True):
+                 emotions=['negative', 'neutral', 'positive'], balance=True):
         """
         Params:
             audio_config (dict): the dictionary that indicates what features to extract from the audio file,
@@ -22,7 +23,7 @@ class AudioExtractor:
             verbose (bool/int): verbosity level, 0 for silence, 1 for info, default is 1
             features_folder_name (str): the folder to store output features extracted, default is "features".
             classification (bool): whether it is a classification or regression, default is True (i.e classification)
-            emotions (list): list of emotions to be extracted, default is ['sad', 'neutral', 'happy']
+            emotions (list): list of emotions to be extracted, default is ['negative', 'neutral', 'positive']
             balance (bool): whether to balance dataset (both training and testing), default is True
         """
         self.audio_config = audio_config if audio_config else {'mfcc': True, 'chroma': True, 'mel': True,
@@ -36,7 +37,6 @@ class AudioExtractor:
         self.input_dimension = None
 
     def _load_data(self, desc_files, partition, shuffle):
-        print(desc_files)
         self.load_metadata_from_desc_file(desc_files, partition)
         # balancing the datasets ( both training or testing )
         if partition == "train" and self.balance:
@@ -89,7 +89,7 @@ class AudioExtractor:
             # so naive and need to be implemented
             # in a better way
             if len(self.emotions) == 3:
-                self.categories = {'sad': 1, 'neutral': 2, 'happy': 3}
+                self.categories = {'negative': 1, 'neutral': 2, 'positive': 3}
             elif len(self.emotions) == 5:
                 self.categories = {'angry': 1, 'sad': 2, 'neutral': 3, 'ps': 4, 'happy': 5}
             else:
@@ -114,11 +114,17 @@ class AudioExtractor:
             # file does not exist, extract those features and dump them into the file
             features = []
             append = features.append
+            path_counter = 0
             for audio_file in tqdm.tqdm(audio_paths, f"Extracting features for {partition}"):
                 feature = extract_feature(audio_file, **self.audio_config)
+                xv = one_to_xvec(audio_paths[path_counter])
+                path_counter = path_counter + 1
+                feature = np.concatenate((feature, xv))
                 if self.input_dimension is None:
                     self.input_dimension = feature.shape[0]
+
                 append(feature)
+
             # convert to numpy array
             features = np.array(features)
             # save it
@@ -197,6 +203,7 @@ class AudioExtractor:
         for emotion, features_audio_paths in d.items():
             for feature, audio_path in features_audio_paths:
                 emotions.append(emotion)
+                # feature = np.concatenate(feature, xv)
                 features.append(feature)
                 audio_paths.append(audio_path)
 
@@ -234,7 +241,7 @@ def shuffle_data(audio_paths, emotions, features):
 
 
 def load_data(train_desc_files, test_desc_files, audio_config=None, classification=True, shuffle=True,
-              balance=True, emotions=['sad', 'neutral', 'happy']):
+              balance=True, emotions=['negative', 'neutral', 'positive']):
     # instantiate the class
     audiogen = AudioExtractor(audio_config=audio_config, classification=classification, emotions=emotions,
                               balance=balance, verbose=0)

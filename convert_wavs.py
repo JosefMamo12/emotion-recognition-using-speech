@@ -1,11 +1,10 @@
-
-
 """
 A utility script used for converting audio samples to be 
 suitable for feature extraction
 """
 
 import os
+
 
 def convert_audio(audio_path, target_path, remove=False):
     """This function sets the audio `audio_path` to:
@@ -53,11 +52,13 @@ def convert_audios(path, target_path, remove=False):
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(description="""Convert ( compress ) wav files to 16MHz and mono audio channel ( 1 channel )
                                                     This utility helps for compressing wav files for training and testing""")
     parser.add_argument("audio_path", help="Folder that contains wav files you want to convert")
     parser.add_argument("target_path", help="Folder to save new wav files")
-    parser.add_argument("-r", "--remove", type=bool, help="Whether to remove the old wav file after converting", default=False)
+    parser.add_argument("-r", "--remove", type=bool, help="Whether to remove the old wav file after converting",
+                        default=False)
 
     args = parser.parse_args()
     audio_path = args.audio_path

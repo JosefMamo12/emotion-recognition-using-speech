@@ -14,7 +14,9 @@ AVAILABLE_EMOTIONS = {
     "fear",
     "disgust",
     "ps",  # pleasant surprised
-    "boredom"
+    "boredom",
+    "negative",
+    "positive"
 }
 
 
