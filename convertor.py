@@ -23,7 +23,7 @@ categories = {
     "T": "sad",
     "N": "neutral"
 }
-matches = ['M', 'manipulated','cut']
+matches = ['M', 'manipulated', 'cut']
 valid_check = ['test', 'validation', 'emodb']
 
 positive_emotions = ['ps', 'happy']
@@ -33,7 +33,7 @@ negative_emotions = ['fear', 'disgust', 'sad', 'angry']
 emotions = ['positive', 'neutral', 'negative']
 
 
-def insert_manipulate(string, index, extra_string='-manipulated-'):
+def insert_manipulate(string, index, extra_string):
     return string[:index - 1] + extra_string + string[index - 1:]
 
 
@@ -94,7 +94,7 @@ def dir_clean_manipulated():
                 os.remove(path)
 
 
-def random_background_cut(src_path, backgrounds_path, volume=0, manipulated_name='-cut-'):
+def random_background_cut(src_path, background_path, volume):
     for subdir, dirs, files in os.walk(src_path):
         if any(x in subdir for x in valid_check):
             continue
@@ -103,29 +103,27 @@ def random_background_cut(src_path, backgrounds_path, volume=0, manipulated_name
                 random_seed = random.randint(1, 3)
                 if random_seed == 1:
                     path = os.path.join(subdir, file)
-                    str_sound = file.split('.')[0]
-                    background_file = random.choice(os.listdir(backgrounds_path))
-                    background_audio = convert_to_audiosegment(backgrounds_path + '/' + background_file, volume)
-                    index = index_finder(str_sound)
-                    manipulated = insert_manipulate(str_sound, index=index, extra_string=manipulated_name)
-                    sound = AudioSegment.from_wav(path)
-                    add_background_voices(sound, background_audio, manipulated, subdir)
+                    duplicated_func(file, path, background_path, subdir, volume, '-cut-')
 
 
-def one_background_voice_for_all(src_path, background_sound_path, volume_of_background=0,
-                                 mixed_name='-manipulated', mixed=False):
-    audio_seg_background = convert_to_audiosegment(background_sound_path, volume_of_background)
+def duplicated_func(file, path, background_path, subdir, volume, identify_str):
+    str_sound = file.split('.')[0]
+    index = index_finder(str_sound)
+    manipulated = insert_manipulate(str_sound, index, identify_str)
+    background_file = random.choice(os.listdir(background_path))
+    audio_seg_background = convert_to_audiosegment(background_path + '/' + background_file, volume)
+    sound = AudioSegment.from_wav(path)
+    add_background_voices(sound, audio_seg_background, manipulated, subdir)
+
+
+def random_background_voice_for_all(src_path, background_path, volume):
     for subdir, dirs, files in os.walk(src_path):
         if any(x in subdir for x in valid_check):
             continue
         for file in files:
             if file.endswith('wav') and not any(x in file for x in matches):
                 path = os.path.join(subdir, file)
-                str_sound = file.split('.')[0]
-                index = index_finder(str_sound)
-                manipulated = insert_manipulate(str_sound, index)
-                sound = AudioSegment.from_wav(path)
-                add_background_voices(sound, audio_seg_background, manipulated, subdir)
+                duplicated_func(file, path, background_path, subdir, volume, '-manipulated-')
 
 
 def convert_to_audiosegment(path, vol):
@@ -154,11 +152,9 @@ def convert(src, dst, ending_format):
     subprocess.call(['ffmpeg', '-i', src, dst + '.' + ending_format])
 
 
-random_background_cut('data', 'background/youtube', -2)
+# random_background_cut('data', 'background/youtube', -2)
 # iterative_directory_sound_convertor('background', 'wav')
 # dir_clean_manipulated()
 # emotion_changer()
 #
-# one_background_voice_for_all('data',
-#                              background_sound_path='background/jet-plane-flybyflac-14641.wav',
-#                              volume_of_background=-7)
+random_background_voice_for_all('data', 'background/random_background', -5)

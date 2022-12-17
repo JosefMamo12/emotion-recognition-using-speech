@@ -22,7 +22,6 @@ def xvec_to_vec(src_path):
                 embeddings = embeddings.detach().cpu().numpy()
                 embedding = embeddings[0][0]
                 vec_ret.insert(embedding)
-
     return vec_ret
 
 
