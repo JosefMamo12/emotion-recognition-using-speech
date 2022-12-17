@@ -63,6 +63,15 @@ def rename_files(file) -> str:
     return new_file
 
 
+def str_to_num(case):
+    switcher = {
+        'negative': -1,
+        'neutral': 0,
+        'positive': 1
+    }
+    return switcher.get(case, "nothing")
+
+
 def emotion_changer():
     count = 0
     for subdir, dirs, files in os.walk('data'):
@@ -151,10 +160,10 @@ def iterative_directory_sound_convertor(path, ending_format):
 def convert(src, dst, ending_format):
     subprocess.call(['ffmpeg', '-i', src, dst + '.' + ending_format])
 
-
-# random_background_cut('data', 'background/youtube', -2)
-# iterative_directory_sound_convertor('background', 'wav')
-# dir_clean_manipulated()
+# if __name__ == '__main__':
+#     # random_background_cut('data', 'background/youtube', -2)
+#     # iterative_directory_sound_convertor('background', 'wav')
+#     dir_clean_manipulated()
 # emotion_changer()
 #
-random_background_voice_for_all('data', 'background/random_background', -5)
+# random_background_voice_for_all('data', 'background/random_background', -5)

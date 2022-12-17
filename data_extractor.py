@@ -3,7 +3,8 @@ import pandas as pd
 import pickle
 import tqdm
 import os
-
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 from utils import get_label, extract_feature, get_first_letters
 from collections import defaultdict
 from xvector_creator import one_to_xvec

@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 from data_extractor import load_data
 from utils import extract_feature, AVAILABLE_EMOTIONS
 from create_csv import write_emodb_csv, write_tess_ravdess_csv, write_custom_csv
@@ -6,6 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, make_scorer, fbeta_score, mean_squared_error, mean_absolute_error
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import GridSearchCV
+from sklearn.preprocessing import normalize
 
 import matplotlib.pyplot as pl
 from time import time
@@ -15,7 +18,34 @@ import tqdm
 import os
 import random
 import pandas as pd
+from convertor import str_to_num
 from xvector_creator import one_to_xvec
+
+# def changer(y):
+#     i = 0
+#     for item in y:
+#         y[i] = str_to_num(item)
+#         i = i + 1
+
+pca_test = PCA(0.95)
+
+
+def one_sample_pca(one_sample):
+    X_pca = pca_test.transform(one_sample)
+    return X_pca
+
+
+def pca(X_train, X_test):
+    scaler = StandardScaler()
+    features_concatenate = (np.append(X_train, X_test, axis=0))
+    scaler.fit(features_concatenate)
+    scaled_data = scaler.transform(features_concatenate)
+    plt.rcParams["figure.figsize"] = (30, 7)
+    X_pca = pca_test.fit_transform(scaled_data)
+    X_pca_train = X_pca[:len(X_train)]
+    X_pca_test = X_pca[len(X_train):]
+    plt.plot(np.cumsum(pca_test.explained_variance_ratio_))
+    return X_pca_train, X_pca_test
 
 
 class EmotionRecognizer:
@@ -154,6 +184,7 @@ class EmotionRecognizer:
                                emotions=self.emotions, balance=self.balance)
             self.X_train = result['X_train']
             self.X_test = result['X_test']
+            self.X_train, self.X_test = pca(self.X_train, self.X_test)
             self.y_train = result['y_train']
             self.y_test = result['y_test']
             self.train_audio_paths = result['train_audio_paths']
@@ -184,8 +215,8 @@ class EmotionRecognizer:
         feature = extract_feature(audio_path, **self.audio_config)
         xv = one_to_xvec(audio_path)
         feature = np.concatenate((xv, feature)).reshape(1, -1)
-        print(len(feature[0]))
-        return self.model.predict(feature)[0]
+        X_feature = one_sample_pca(feature)
+        return self.model.predict(X_feature)[0]
 
     def predict_proba(self, audio_path):
         """
@@ -338,7 +369,7 @@ class EmotionRecognizer:
 
     def get_samples_by_class(self):
         """
-        Returns a dataframe that contains the number of training 
+        Returns a dataframe that contains the number of training
         and testing samples for all emotions.
         Note that if data isn't loaded yet, it'll be loaded
         """
