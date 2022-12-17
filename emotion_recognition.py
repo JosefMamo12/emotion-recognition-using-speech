@@ -28,15 +28,10 @@ from xvector_creator import one_to_xvec
 #         i = i + 1
 
 pca_test = PCA(0.95)
-
-
-def one_sample_pca(one_sample):
-    X_pca = pca_test.transform(one_sample)
-    return X_pca
+scaler = StandardScaler()
 
 
 def pca(X_train, X_test):
-    scaler = StandardScaler()
     features_concatenate = (np.append(X_train, X_test, axis=0))
     scaler.fit(features_concatenate)
     scaled_data = scaler.transform(features_concatenate)
@@ -46,6 +41,13 @@ def pca(X_train, X_test):
     X_pca_test = X_pca[len(X_train):]
     plt.plot(np.cumsum(pca_test.explained_variance_ratio_))
     return X_pca_train, X_pca_test
+
+
+def one_sample_pca(one_sample):
+
+    scaled_data = scaler.transform(one_sample)
+    X_pca = pca_test.transform(scaled_data)
+    return X_pca
 
 
 class EmotionRecognizer:
