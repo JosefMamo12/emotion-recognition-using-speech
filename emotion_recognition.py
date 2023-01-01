@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 
+from pca_helper import PcaHelper
 from data_extractor import load_data
 from utils import extract_feature, AVAILABLE_EMOTIONS
 from create_csv import write_emodb_csv, write_tess_ravdess_csv, write_custom_csv
@@ -27,26 +28,21 @@ from xvector_creator import one_to_xvec
 #         y[i] = str_to_num(item)
 #         i = i + 1
 
-pca_test = PCA(0.95)
-scaler = StandardScaler()
+pca_with_knee_locator = None
 
 
 def pca(X_train, X_test):
-    features_concatenate = (np.append(X_train, X_test, axis=0))
-    scaler.fit(features_concatenate)
-    scaled_data = scaler.transform(features_concatenate)
-    plt.rcParams["figure.figsize"] = (30, 7)
-    X_pca = pca_test.fit_transform(scaled_data)
-    X_pca_train = X_pca[:len(X_train)]
-    X_pca_test = X_pca[len(X_train):]
-    plt.plot(np.cumsum(pca_test.explained_variance_ratio_))
-    return X_pca_train, X_pca_test
+    first_pca_to_find_knee_locator = PcaHelper(X_train, X_test)
+    min_samples = first_pca_to_find_knee_locator.find_knee_locator()
+    global pca_with_knee_locator
+    pca_with_knee_locator = PcaHelper(X_train, X_test, min_samples)
+    x_train_after_pca, x_test_after_pca = pca_with_knee_locator.data_to_load()
+    return x_train_after_pca, x_test_after_pca
 
 
 def one_sample_pca(one_sample):
-
-    scaled_data = scaler.transform(one_sample)
-    X_pca = pca_test.transform(scaled_data)
+    scaled_data = pca_with_knee_locator.scaler.transform(one_sample)
+    X_pca = pca_with_knee_locator.pca_test.transform(scaled_data)
     return X_pca
 
 
