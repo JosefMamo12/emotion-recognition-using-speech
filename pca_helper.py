@@ -2,6 +2,7 @@ from kneed import KneeLocator
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class PcaHelper:
@@ -17,10 +18,11 @@ class PcaHelper:
         self.scaler.fit(self.train_dataset)
         scaled_data = self.scaler.transform(self.train_dataset)
         self.pca_test.fit_transform(scaled_data)
-        x = list(range(0, self.feature_len))
+        x = list(range(1, self.feature_len + 1))
         y = np.cumsum(self.pca_test.explained_variance_ratio_)
         kl = KneeLocator(x, y)
         kl.plot_knee()
+        plt.show()
         return kl.knee
 
     def data_to_load(self):
