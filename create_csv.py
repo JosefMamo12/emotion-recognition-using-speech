@@ -1,7 +1,6 @@
 import glob
 import pandas as pd
 import os
-from xvector_creator import one_to_xvec
 
 
 def write_emodb_csv(emotions=["negative", "neutral", "positive"], train_name="train_emo.csv",
@@ -9,7 +8,7 @@ def write_emodb_csv(emotions=["negative", "neutral", "positive"], train_name="tr
     """
     Reads speech emodb dataset from directory and write it to a metadata CSV file.
     params:
-        emotions (list): list of emotions to read from the folder, default is ['sad', 'neutral', 'happy']
+        emotions (list): list of emotions to read from the folder, default is ['negative', 'neutral', 'positive']
         train_name (str): the output csv filename for training data, default is 'train_emo.csv'
         test_name (str): the output csv filename for testing data, default is 'test_emo.csv'
         train_size (float): the ratio of splitting training data, default is 0.8 (80% Training data and 20% testing data)
@@ -17,13 +16,13 @@ def write_emodb_csv(emotions=["negative", "neutral", "positive"], train_name="tr
     """
     target = {"path": [], "emotion": []}
     categories = {
-        "W": "negative",  # -1
-        "L": "neutral",  # 0
-        "E": "negative",  # -1
-        "A": "negative",  # -1
-        "F": "positive",  # 1
-        "T": "negative",  # -1
-        "N": "neutral"  # 0
+        "W": "negative",
+        "L": "neutral",
+        "E": "negative",
+        "A": "negative",
+        "F": "positive",
+        "T": "negative",
+        "N": "neutral"
     }
     # delete not specified emotions
     categories_reversed = {v: k for k, v in categories.items()}
@@ -52,8 +51,6 @@ def write_emodb_csv(emotions=["negative", "neutral", "positive"], train_name="tr
     y_train = target['emotion'][:train_size]
     y_test = target['emotion'][train_size:]
     pd.DataFrame({"path": X_train, "emotion": y_train}).to_csv(train_name)
-
-
     pd.DataFrame({"path": X_test, "emotion": y_test}).to_csv(test_name)
 
 
@@ -86,6 +83,39 @@ def write_tess_ravdess_csv(emotions=["negative", "neutral", "positive"], train_n
             test_target["emotion"].append(category)
         if verbose and total_files:
             print(f"[TESS&RAVDESS] There are {len(total_files)} testing audio files for category:{category}")
+    pd.DataFrame(test_target).to_csv(test_name)
+    pd.DataFrame(train_target).to_csv(train_name)
+
+
+def write_urdu_csv(emotions=["negative", "neutral", "positive"], train_name="train_urdu.csv",
+                   test_name="test_urdu.csv", verbose=1):
+    """
+    Reads speech TESS & RAVDESS datasets from directory and write it to a metadata CSV file.
+    params:
+        emotions (list): list of emotions to read from the folder, default is ['sad', 'neutral', 'happy']
+        train_name (str): the output csv filename for training data, default is 'train_tess_ravdess.csv'
+        test_name (str): the output csv filename for testing data, default is 'test_tess_ravdess.csv'
+        verbose (int/bool): verbositiy level, 0 for silence, 1 for info, default is 1
+    """
+    train_target = {"path": [], "emotion": []}
+    test_target = {"path": [], "emotion": []}
+
+    for category in emotions:
+        # for training speech directory
+        total_files = glob.glob(f"data/urdu_train/*_{category}.wav")
+        for i, path in enumerate(total_files):
+            train_target["path"].append(path)
+            train_target["emotion"].append(category)
+        if verbose and total_files:
+            print(f"[URDU] There are {len(total_files)} training audio files for category:{category}")
+
+        # for validation speech directory
+        total_files = glob.glob(f"data/urdu_test/*_{category}.wav")
+        for i, path in enumerate(total_files):
+            test_target["path"].append(path)
+            test_target["emotion"].append(category)
+        if verbose and total_files:
+            print(f"[URDU] There are {len(total_files)} testing audio files for category:{category}")
     pd.DataFrame(test_target).to_csv(test_name)
     pd.DataFrame(train_target).to_csv(train_name)
 

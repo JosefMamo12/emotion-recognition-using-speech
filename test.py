@@ -1,8 +1,5 @@
 from emotion_recognition import EmotionRecognizer
-from utils import get_best_estimators
-import warnings
 
-warnings.filterwarnings('ignore')
 import pyaudio
 import os
 import wave
@@ -10,6 +7,9 @@ from sys import byteorder
 from array import array
 from struct import pack
 from sklearn.ensemble import GradientBoostingClassifier, BaggingClassifier
+import warnings
+
+warnings.filterwarnings('ignore')
 
 from utils import get_best_estimators
 
@@ -73,11 +73,12 @@ def add_silence(snd_data, seconds):
 
 def record():
     """
-    Record a word or words from the microphone and
+    Record a word or words from the microphone and 
     return the data as an array of signed shorts.
-    Normalizes the audio, trims silence from the
-    start and end, and pads with 0.5 seconds of
-    blank sound to make sure VLC et al can play
+
+    Normalizes the audio, trims silence from the 
+    start and end, and pads with 0.5 seconds of 
+    blank sound to make sure VLC et al can play 
     it without getting chopped off.
     """
     p = pyaudio.PyAudio()
@@ -162,12 +163,29 @@ if __name__ == "__main__":
 
     features = ["mfcc", "chroma", "mel"]
     detector = EmotionRecognizer(estimator_dict[args.model], emotions=args.emotions.split(","), features=features,
-                                 verbose=0)
+                                 verbose=0, balance=True)
     detector.train()
+    # detector.determine_best_model()
+    # get the determined sklearn model name
+    # print(detector.model.__class__.__name__, "is the best")
+    # # get the test accuracy score for the best estimator
+    # print("Test score:", detector.test_score())
+    # # for file in os.listdir("MyValidation"):
+    # #     result = detector.predict(f"MyValidation/{file}")
+    # #     result_proba = detector.predict_proba(f"MyValidation/{file}")
+    # #     print(f"{file} = {result}, {result_proba}")
     print("Test accuracy score: {:.3f}%".format(detector.test_score() * 100))
-    # print("Please talk")
+    # # print("Please talk")
     #
-    filename = "test.wav"
-    # record_to_file(filename)
+    filename = "data/training/Actor_01/0_01_01_01_01_dogs-sitting_negative.wav"
+    # # record_to_file(filename)
     result = detector.predict(filename)
-    print(result)
+    result_proba = detector.predict_proba(filename)
+    print(f"{result}, {result_proba}")
+
+    print(f"Positive: {detector.get_n_samples('positive', 'train')}")
+    print(f"Neutral: {detector.get_n_samples('neutral', 'train')}")
+    print(f"Negative: {detector.get_n_samples('negative', 'train')}")
+    print(detector.confusion_matrix())
+    # print(result)
+    # print(result_proba)

@@ -4,12 +4,10 @@ from pca_helper import PcaHelper
 from data_extractor import load_data
 from utils import extract_feature, AVAILABLE_EMOTIONS
 from create_csv import write_emodb_csv, write_tess_ravdess_csv, write_custom_csv
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
+
 from sklearn.metrics import accuracy_score, make_scorer, fbeta_score, mean_squared_error, mean_absolute_error
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import GridSearchCV
-from sklearn.preprocessing import normalize
 
 import matplotlib.pyplot as pl
 from time import time
@@ -19,14 +17,8 @@ import tqdm
 import os
 import random
 import pandas as pd
-from convertor import str_to_num
-from xvector_creator import one_to_xvec
 
-# def changer(y):
-#     i = 0
-#     for item in y:
-#         y[i] = str_to_num(item)
-#         i = i + 1
+from my_Xvector import one_to_xvec
 
 pca_with_knee_locator = None
 
@@ -221,8 +213,11 @@ class EmotionRecognizer:
         Predicts the probability of each emotion.
         """
         if self.classification:
-            feature = extract_feature(audio_path, **self.audio_config).reshape(1, -1)
-            proba = self.model.predict_proba(feature)[0]
+            feature = extract_feature(audio_path, **self.audio_config)
+            xv = one_to_xvec(audio_path)
+            feature = np.concatenate((xv, feature)).reshape(1, -1)
+            X_feature = one_sample_pca(feature)
+            proba = self.model.predict_proba(X_feature)[0]
             result = {}
             for emotion, prob in zip(self.model.classes_, proba):
                 result[emotion] = prob
@@ -473,7 +468,7 @@ def plot_histograms(classifiers=True, beta=0.5, n_classes=3, verbose=1):
 def visualize(results, n_classes):
     """
     Visualization code to display results of various learners.
-    
+
     inputs:
       - results: a dictionary of lists of dictionaries that contain various results on the corresponding estimator
       - n_classes: number of classes

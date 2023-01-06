@@ -13,6 +13,7 @@ class PcaHelper:
         self.train_samples_len = len(x_train)
         self.pca_test = PCA(num_of_samples)
         self.scaler = StandardScaler()
+        self.min_feature_amount = None
 
     def find_knee_locator(self):
         self.scaler.fit(self.train_dataset)
@@ -22,6 +23,8 @@ class PcaHelper:
         y = np.cumsum(self.pca_test.explained_variance_ratio_)
         kl = KneeLocator(x, y)
         kl.plot_knee()
+        print(f"Features after pca: {kl.knee}")
+        print("Saved covariance after pca: {:.3f}%".format(y[kl.knee] * 100))
         plt.show()
         return kl.knee
 

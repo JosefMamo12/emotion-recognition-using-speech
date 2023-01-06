@@ -13,7 +13,7 @@ from emotion_recognition import EmotionRecognizer
 from parameters import classification_grid_parameters, regression_grid_parameters
 
 # emotion classes you want to perform grid search on
-emotions = ['sad', 'neutral', 'happy']
+emotions = ['negative', 'neutral', 'positive']
 # number of parallel jobs during the grid search
 n_jobs = 4
 
