@@ -87,39 +87,6 @@ def write_tess_ravdess_csv(emotions=["negative", "neutral", "positive"], train_n
     pd.DataFrame(train_target).to_csv(train_name)
 
 
-def write_urdu_csv(emotions=["negative", "neutral", "positive"], train_name="train_urdu.csv",
-                   test_name="test_urdu.csv", verbose=1):
-    """
-    Reads speech TESS & RAVDESS datasets from directory and write it to a metadata CSV file.
-    params:
-        emotions (list): list of emotions to read from the folder, default is ['sad', 'neutral', 'happy']
-        train_name (str): the output csv filename for training data, default is 'train_tess_ravdess.csv'
-        test_name (str): the output csv filename for testing data, default is 'test_tess_ravdess.csv'
-        verbose (int/bool): verbositiy level, 0 for silence, 1 for info, default is 1
-    """
-    train_target = {"path": [], "emotion": []}
-    test_target = {"path": [], "emotion": []}
-
-    for category in emotions:
-        # for training speech directory
-        total_files = glob.glob(f"data/urdu_train/*_{category}.wav")
-        for i, path in enumerate(total_files):
-            train_target["path"].append(path)
-            train_target["emotion"].append(category)
-        if verbose and total_files:
-            print(f"[URDU] There are {len(total_files)} training audio files for category:{category}")
-
-        # for validation speech directory
-        total_files = glob.glob(f"data/urdu_test/*_{category}.wav")
-        for i, path in enumerate(total_files):
-            test_target["path"].append(path)
-            test_target["emotion"].append(category)
-        if verbose and total_files:
-            print(f"[URDU] There are {len(total_files)} testing audio files for category:{category}")
-    pd.DataFrame(test_target).to_csv(test_name)
-    pd.DataFrame(train_target).to_csv(train_name)
-
-
 def write_custom_csv(emotions=['negative', 'neutral', 'positive'], train_name="train_custom.csv",
                      test_name="test_custom.csv",
                      verbose=1):

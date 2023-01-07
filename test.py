@@ -1,3 +1,4 @@
+import emotion_recognition
 from emotion_recognition import EmotionRecognizer
 
 import pyaudio
@@ -6,6 +7,7 @@ import wave
 from sys import byteorder
 from array import array
 from struct import pack
+import numpy as np
 from sklearn.ensemble import GradientBoostingClassifier, BaggingClassifier
 import warnings
 
@@ -163,7 +165,7 @@ if __name__ == "__main__":
 
     features = ["mfcc", "chroma", "mel"]
     detector = EmotionRecognizer(estimator_dict[args.model], emotions=args.emotions.split(","), features=features,
-                                 verbose=0, balance=True)
+                                 verbose=0, balance=False)
     detector.train()
     # detector.determine_best_model()
     # get the determined sklearn model name
@@ -187,5 +189,17 @@ if __name__ == "__main__":
     print(f"Neutral: {detector.get_n_samples('neutral', 'train')}")
     print(f"Negative: {detector.get_n_samples('negative', 'train')}")
     print(detector.confusion_matrix())
+    print(detector.get_samples_by_class())
+    precision, recall, f1, true_sum = detector.precision_recall_f1_score()
+    print("Precision test score: {:.3f}%".format(
+        np.mean(precision) * 100))  # Total correct prediction of label / all labels of in same prediction
+    print("Recall test score: {:.3f}%".format(
+        np.mean(
+            recall) * 100))  # Recall is total correct prediction of specific label / total samples of the same label
+    print("F_measure test score: {:.3f}%".format(
+        np.mean(
+            f1)) * 100)  # F-measure = 2 * (precision * recall) / (precision + recall).
+    # We use this kind of measure when our data isn't balanced
+
     # print(result)
     # print(result_proba)

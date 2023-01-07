@@ -6,6 +6,11 @@ import matplotlib.pyplot as plt
 
 
 class PcaHelper:
+    """
+    For pca algorithm,
+    First I would like to find the best relation between the amount of features to the highest covariance value,
+    using knee locator algorithm.
+    """
     def __init__(self, x_train, x_test, num_of_samples=None):
         self.train_dataset = (np.append(x_train, x_test, axis=0))
         self.samples_after_pca = num_of_samples

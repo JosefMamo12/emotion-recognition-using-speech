@@ -5,7 +5,8 @@ from data_extractor import load_data
 from utils import extract_feature, AVAILABLE_EMOTIONS
 from create_csv import write_emodb_csv, write_tess_ravdess_csv, write_custom_csv
 
-from sklearn.metrics import accuracy_score, make_scorer, fbeta_score, mean_squared_error, mean_absolute_error
+from sklearn.metrics import accuracy_score, make_scorer, fbeta_score, mean_squared_error, mean_absolute_error, \
+    precision_recall_fscore_support
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import GridSearchCV
 
@@ -299,6 +300,28 @@ class EmotionRecognizer:
         y_pred = self.model.predict(self.X_test)
         if self.classification:
             return accuracy_score(y_true=self.y_test, y_pred=y_pred)
+        else:
+            return mean_squared_error(y_true=self.y_test, y_pred=y_pred)
+
+    def precision_recall_f1_score(self):
+        """Compute precision, recall, F-measure and support for each class.
+
+           The precision is the ratio ``tp / (tp + fp)`` where ``tp`` is the number of
+           true positives and ``fp`` the number of false positives. The precision is
+           intuitively the ability of the classifier not to label as positive a sample
+           that is negative.
+
+           The recall is the ratio ``tp / (tp + fn)`` where ``tp`` is the number of
+           true positives and ``fn`` the number of false negatives. The recall is
+           intuitively the ability of the classifier to find all the positive samples.
+
+           The F-beta score can be interpreted as a weighted harmonic mean of
+           the precision and recall, where an F-beta score reaches its best
+           value at 1 and worst score at 0."""
+
+        y_pred = self.model.predict(self.X_test)
+        if self.classification:
+            return precision_recall_fscore_support(y_true=self.y_test, y_pred=y_pred)
         else:
             return mean_squared_error(y_true=self.y_test, y_pred=y_pred)
 
